@@ -52,3 +52,8 @@ export interface RawUser {
 }
 
 export type PatientFormData = z.infer<typeof patientFormSchema>;
+
+export interface InitialPatientData {
+  patients: Patient[];
+  error?: string;
+}

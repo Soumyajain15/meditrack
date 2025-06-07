@@ -1,4 +1,4 @@
-import type { Patient, RawUser } from '@/lib/types';
+import type { Patient, RawUser, InitialPatientData } from '@/lib/types';
 import DashboardClientPage from '@/components/dashboard/dashboard-client-page';
 
 // Helper to transform raw user data to Patient data
@@ -25,33 +25,53 @@ const transformRawUserToPatient = (rawUser: RawUser): Patient => {
 };
 
 
-async function getInitialPatients(): Promise<Patient[]> {
+async function getInitialPatients(): Promise<InitialPatientData> {
   try {
     // Fetch a limited number of users for performance; dummyjson default is 30, max 100 per page
     // Use limit=0 to attempt to get all, or a specific limit e.g. 50
     const response = await fetch('https://dummyjson.com/users?limit=50&select=id,firstName,lastName,age,gender,email,phone,birthDate,image,bloodGroup,height,weight,address,company');
+    
     if (!response.ok) {
-      console.error("Failed to fetch patients:", response.statusText);
-      return [];
+      let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData && errorData.message) {
+          errorMessage = `API Error: ${errorData.message}`;
+        }
+      } catch (e) {
+        // Failed to parse error JSON, stick with status text
+      }
+      console.error("Failed to fetch patients:", errorMessage);
+      return { patients: [], error: errorMessage };
     }
+
     const data = await response.json();
     if (Array.isArray(data.users)) {
-       return data.users.map((user: RawUser) => transformRawUserToPatient(user));
+       const patients = data.users.map((user: RawUser) => transformRawUserToPatient(user));
+       return { patients };
     }
-    return [];
-  } catch (error) {
-    console.error("Error fetching patient data:", error);
-    return [];
+    
+    const malformedError = "Received malformed patient data from API.";
+    console.error(malformedError, data);
+    return { patients: [], error: malformedError };
+
+  } catch (error: unknown) {
+    let errorMessage = "An unexpected error occurred while fetching patient data.";
+    if (error instanceof Error) {
+      errorMessage = `Network or unexpected error: ${error.message}`;
+    }
+    console.error("Error fetching patient data:", errorMessage, error);
+    return { patients: [], error: errorMessage };
   }
 }
 
 
 export default async function Home() {
-  const initialPatients = await getInitialPatients();
+  const initialData = await getInitialPatients();
 
   return (
     <main className="flex-grow">
-      <DashboardClientPage initialPatients={initialPatients} />
+      <DashboardClientPage initialData={initialData} />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { Patient, PatientFormData, RawUser } from '@/lib/types';
+import type { Patient, PatientFormData, RawUser, InitialPatientData } from '@/lib/types';
 import PatientTable from './patient-table';
 import PatientForm from './patient-form';
 import PageHeader from './page-header';
@@ -28,31 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardClientPageProps {
-  initialPatients: Patient[];
+  initialData: InitialPatientData;
 }
-
-// Helper to transform raw user data to Patient data
-const transformRawUserToPatient = (rawUser: RawUser): Patient => {
-  return {
-    id: rawUser.id,
-    firstName: rawUser.firstName,
-    lastName: rawUser.lastName,
-    age: rawUser.age,
-    gender: rawUser.gender as 'male' | 'female', // API guarantees male/female
-    email: rawUser.email,
-    phone: rawUser.phone,
-    birthDate: rawUser.birthDate, // Assuming API provides YYYY-MM-DD
-    bloodGroup: rawUser.bloodGroup,
-    height: rawUser.height,
-    weight: rawUser.weight,
-    address: {
-      city: rawUser.address.city,
-      street: rawUser.address.address,
-    },
-    admissionDepartment: rawUser.company?.department || 'N/A',
-    image: rawUser.image || 'https://placehold.co/100x100.png',
-  };
-};
 
 // Helper to transform Patient to PatientFormData for the form
 const transformPatientToFormData = (patient: Patient): PatientFormData => {
@@ -75,22 +52,33 @@ const transformPatientToFormData = (patient: Patient): PatientFormData => {
 };
 
 
-const DashboardClientPage: React.FC<DashboardClientPageProps> = ({ initialPatients }) => {
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+const DashboardClientPage: React.FC<DashboardClientPageProps> = ({ initialData }) => {
+  const [patients, setPatients] = useState<Patient[]>(initialData.patients);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<PatientFormData | null>(null);
   const [patientToDeleteId, setPatientToDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true); // For initial load effect
+  const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
-    // Simulate loading delay for demonstration
+    if (initialData.error) {
+      toast({
+        title: "Error Loading Patient Data",
+        description: initialData.error,
+        variant: "destructive",
+        duration: 10000, // Keep error toast longer
+      });
+    }
+    // Set patients from initialData, which could be empty if there was an error
+    setPatients(initialData.patients);
+
+    // Simulate a minimum loading time or stop loading if data/error is definite
     const timer = setTimeout(() => {
-      setPatients(initialPatients);
       setIsLoading(false);
-    }, 500); // Adjust delay as needed
+    }, 500); // Keep a small delay for perceived performance
+
     return () => clearTimeout(timer);
-  }, [initialPatients]);
+  }, [initialData, toast]);
 
 
   const handleAddPatient = () => {
@@ -143,9 +131,6 @@ const DashboardClientPage: React.FC<DashboardClientPageProps> = ({ initialPatien
       );
       toast({ title: "Patient Updated", description: `${data.firstName} ${data.lastName}'s record updated.` });
     } else { // Adding new patient
-      // Assign a new unique ID if it's a new patient
-      // Since dummyjson.com doesn't persist, this is client-side only.
-      // A real app would get the ID from the backend.
       const newId = patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1;
       setPatients((prevPatients) => [{ ...newPatientData, id: newId }, ...prevPatients]);
       toast({ title: "Patient Added", description: `${data.firstName} ${data.lastName} added to records.` });
