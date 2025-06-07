@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FilePenLine, Trash2, MoreVertical, ArrowUpDown, Users, Cake, MapPin, Building, Search } from 'lucide-react';
 import type { Patient } from '@/lib/types';
+import { cn } from '@/lib/utils'; // Added import for cn
 
 const ITEMS_PER_PAGE = 10;
 
