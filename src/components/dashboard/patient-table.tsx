@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -13,10 +14,10 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FilePenLine, Trash2, MoreVertical, ArrowUpDown, Users, Cake, MapPin, Building, Search } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'; // Kept for gender filter
+import { FilePenLine, Trash2, ArrowUpDown, Users, Cake, MapPin, Building, Search } from 'lucide-react';
 import type { Patient } from '@/lib/types';
-import { cn } from '@/lib/utils'; // Added import for cn
+import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -184,23 +185,13 @@ const PatientTable: React.FC<PatientTableProps> = ({ patients, onEdit, onDelete 
                 <TableCell className="hidden md:table-cell">{patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)}</TableCell>
                 <TableCell className="hidden lg:table-cell">{patient.address.city}</TableCell>
                 <TableCell className="hidden lg:table-cell">{patient.admissionDepartment}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(patient)}>
-                        <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDelete(patient.id)} className="text-destructive hover:!bg-destructive/10 focus:!bg-destructive/10 focus:!text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <TableCell className="space-x-1 sm:space-x-2">
+                  <Button variant="outline" size="icon" onClick={() => onEdit(patient)} aria-label={`Edit patient ${patient.firstName} ${patient.lastName}`}>
+                    <FilePenLine className="h-4 w-4" />
+                  </Button>
+                  <Button variant="destructive" size="icon" onClick={() => onDelete(patient.id)} aria-label={`Delete patient ${patient.firstName} ${patient.lastName}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
